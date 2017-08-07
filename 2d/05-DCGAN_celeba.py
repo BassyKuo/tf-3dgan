@@ -35,7 +35,7 @@ img_channel= 3
 
 f_dim = 64
 
-model_name = 'celeba_64_bnnew_2'
+model_name = 'celeba_64'
 summary_dir = './summary/'
 train_sample_directory = './train_sample/'
 model_directory = './models/'
@@ -116,7 +116,7 @@ def discriminator(inputs, phase_train=True, reuse=False):
         # d_2 = batch_norm(d_2)
         d_2 = lrelu(d_2, leak_value)
         print('D2: ', d_2)
-        
+
         d_3 = tf.nn.conv2d(d_2, weights['wd3'], strides=strides, padding="SAME")  
         # d_3 = tf.nn.bias_add(d_3, biases['bd3'])
         d_3 = tf.layers.batch_normalization(d_3, training=phase_train, epsilon=1e-8, momentum=0.9)
@@ -124,7 +124,7 @@ def discriminator(inputs, phase_train=True, reuse=False):
         d_3 = lrelu(d_3, leak_value)
         print('D3: ', d_3)
 
-        d_4 = tf.nn.conv2d(d_3, weights['wd4'], strides=strides, padding="SAME")     
+        d_4 = tf.nn.conv2d(d_3, weights['wd4'], strides=strides, padding="SAME")
         # d_4 = tf.nn.bias_add(d_4, biases['bd4'])
         d_4 = tf.layers.batch_normalization(d_4, training=phase_train, epsilon=1e-8, momentum=0.9)
         # d_4 = batch_norm(d_4)
@@ -185,7 +185,7 @@ def initializeWeights():
 
 # ---
 def initializeBiases():
-    
+
     global biases
     zero_init = tf.zeros_initializer()
 
@@ -199,8 +199,8 @@ def initializeBiases():
     biases['bd1'] = tf.get_variable("bd1", shape=[2*f_dim], initializer=zero_init)
     biases['bd2'] = tf.get_variable("bd2", shape=[4*f_dim], initializer=zero_init)
     biases['bd3'] = tf.get_variable("bd3", shape=[8*f_dim], initializer=zero_init)
-    biases['bd4'] = tf.get_variable("bd4", shape=[16*f_dim], initializer=zero_init)    
-    biases['bd5'] = tf.get_variable("bd5", shape=[1024], initializer=zero_init) 
+    biases['bd4'] = tf.get_variable("bd4", shape=[16*f_dim], initializer=zero_init)
+    biases['bd5'] = tf.get_variable("bd5", shape=[1024], initializer=zero_init)
 
     return biases
 # --- ]
@@ -258,7 +258,7 @@ def trainGAN(is_dummy=False, checkpoint=None, name=model_name):
              # tf.nn.sigmoid_cross_entropy_with_logits(logits=d_output_x, labels=smooth_zeros)
     # d_loss = tf.reduce_mean(d_loss)
     # g_loss = tf.reduce_mean(g_loss)
-    
+
     # --- [ Softmax BCE (D output: tanh)
     # logits = tf.concat( (d_output_ax, d_output_az), axis=0 )
     # d_ground_truth = tf.concat( (tf.random_uniform([batch_size], 0.7, 1.0), -tf.random_uniform([batch_size], 0.7, 1.0)), axis=0 )
@@ -305,12 +305,12 @@ def trainGAN(is_dummy=False, checkpoint=None, name=model_name):
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
 
-    with tf.Session(config=config) as sess:  
-      
-        sess.run(tf.global_variables_initializer()) 
+    with tf.Session(config=config) as sess:
+
+        sess.run(tf.global_variables_initializer())
 
         if checkpoint is not None:
-            saver.restore(sess, checkpoint) 
+            saver.restore(sess, checkpoint)
             epoch = sess.run(global_step)
             sess.run(tf.assign(global_step, epoch + 1))
 
@@ -318,7 +318,7 @@ def trainGAN(is_dummy=False, checkpoint=None, name=model_name):
             train = np.random.randint(0,1,(batch_size,img_len,img_len,img_channel))
             print ('Using Dummy Data')
         else:
-            celeba = np.load('../celeba_data/celeba_64.npy')
+            celeba = np.load('../dataset/celeba/celeba_64.npy')
             train = celeba.reshape(-1, 64, 64, 3)
             print ('Using celeba Data')
             print ('[!] train shape: ', train.shape)
@@ -334,7 +334,7 @@ def trainGAN(is_dummy=False, checkpoint=None, name=model_name):
         # z_val = np.random.uniform(-1, 1, size=[batch_size, z_size]).astype(np.float32)
 
         for epoch in range(sess.run(global_step), n_epochs):
-            
+
             idx = np.random.randint(len(train), size=batch_size)
             x = train[idx]
             z = np.random.normal(0, 0.33, size=[batch_size, z_size]).astype(np.float32)
@@ -377,7 +377,7 @@ def trainGAN(is_dummy=False, checkpoint=None, name=model_name):
             # store checkpoint
             if epoch % 1000 == 0:
                 if not os.path.exists(model_directory):
-                    os.makedirs(model_directory)      
+                    os.makedirs(model_directory)
                 saver.save(sess, save_path = os.path.join(model_directory, '{}.ckpt'.format(name)), global_step=global_step)
 
             # writer.add_summary(summary_d, epoch)
@@ -394,7 +394,7 @@ def testGAN(trained_model_path=None, n_batches=batch_size):
     net_g_test = generator(z_vector, phase_train=True, reuse=True)
 
     saver = tf.train.Saver()
-    
+
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         saver.restore(sess, trained_model_path) 

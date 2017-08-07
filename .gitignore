@@ -2,6 +2,7 @@ models/
 train_sample
 exp
 experiments.txt
+*.sw[op]
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
